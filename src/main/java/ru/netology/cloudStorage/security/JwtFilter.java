@@ -28,11 +28,19 @@ public class JwtFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
         String token = getTokenFromRequest((HttpServletRequest) request);
-        if (token != null && jwtProvider.validateAccessToken(token)) {
-            Claims claims = jwtProvider.getAccessClaims(token);
-            JwtAuthentication jwtInfoToken = JwtUtils.generate(claims);
-            jwtInfoToken.setAuthenticated(true);
-            SecurityContextHolder.getContext().setAuthentication(jwtInfoToken);
+        if (token != null) {
+            log.info("Token found in request: {}", token);
+            if (jwtProvider.validateAccessToken(token)) {
+                log.info("Token is valid: {}", token);
+                Claims claims = jwtProvider.getAccessClaims(token);
+                JwtAuthentication jwtInfoToken = JwtUtils.generate(claims);
+                jwtInfoToken.setAuthenticated(true);
+                SecurityContextHolder.getContext().setAuthentication(jwtInfoToken);
+            } else {
+                log.warn("Token is invalid: {}", token);
+            }
+        } else {
+            log.warn("No token found in request.");
         }
         filterChain.doFilter(request, response);
     }
@@ -40,12 +48,16 @@ public class JwtFilter extends GenericFilterBean {
     private String getTokenFromRequest(HttpServletRequest request) {
         String bearer = request.getHeader(AUTHORIZATION);
         String bearer_token = request.getHeader(AUTH_TOKEN);
-        return bearer == null ? getTokenFromHeader(bearer_token) : getTokenFromHeader(bearer);
+        String token = bearer == null ? getTokenFromHeader(bearer_token) : getTokenFromHeader(bearer);
+        log.info("Extracted token from request: {}", token);
+        return token;
     }
 
     private String getTokenFromHeader(String bearer) {
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
-            return bearer.substring(7);
+            String token = bearer.substring(7);
+            log.info("Extracted token from header: {}", token);
+            return token;
         }
         return null;
     }

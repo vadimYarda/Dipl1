@@ -28,7 +28,6 @@ public class JwtProvider {
     private int timeLifeToken;
     private final Set<String> blackListToken = new HashSet<>();
 
-
     public JwtProvider(
             @Value("${jwt.secret}")
             String jwtAccessSecret) {
@@ -36,21 +35,26 @@ public class JwtProvider {
     }
 
     public String generateAccessToken(@NonNull User user) {
+        log.info("Generating access token for user: {}", user.getLogin());
         LocalDateTime now = LocalDateTime.now();
         Instant accessExpirationInstant = now.plusMinutes(timeLifeToken)
                 .atZone(ZoneId.systemDefault()).toInstant();
         Date accessExpiration = Date.from(accessExpirationInstant);
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setId(String.valueOf(user.getId()))
                 .setSubject(user.getLogin())
                 .setExpiration(accessExpiration)
                 .signWith(jwtAccessSecret)
                 .claim("roles", user.getRoles())
                 .compact();
+        log.info("Access token generated for user: {}", user.getLogin());
+        return token;
     }
 
     public boolean validateAccessToken(@NonNull String accessToken) {
+        log.info("Validating access token.");
         if (blackListToken.contains(accessToken)) {
+            log.warn("Token is in blacklist: {}", accessToken);
             return false;
         }
 
@@ -59,22 +63,24 @@ public class JwtProvider {
                     .setSigningKey(jwtAccessSecret)
                     .build()
                     .parseClaimsJws(accessToken);
+            log.info("Token is valid: {}", accessToken);
             return true;
         } catch (ExpiredJwtException expEx) {
-            log.error("Token expired", expEx);
+            log.error("Token expired: {}", accessToken, expEx);
         } catch (UnsupportedJwtException unsEx) {
-            log.error("Unsupported jwt", unsEx);
+            log.error("Unsupported jwt: {}", accessToken, unsEx);
         } catch (MalformedJwtException mjEx) {
-            log.error("Malformed jwt", mjEx);
+            log.error("Malformed jwt: {}", accessToken, mjEx);
         } catch (SignatureException sEx) {
-            log.error("Invalid signature", sEx);
+            log.error("Invalid signature: {}", accessToken, sEx);
         } catch (Exception e) {
-            log.error("invalid token", e);
+            log.error("Invalid token: {}", accessToken, e);
         }
         return false;
     }
 
     public Claims getAccessClaims(@NonNull String token) {
+        log.info("Retrieving claims from token: {}", token);
         return getClaims(token, jwtAccessSecret);
     }
 
@@ -87,6 +93,8 @@ public class JwtProvider {
     }
 
     public void addAuthTokenInBlackList(String authToken) {
+        log.info("Adding token to blacklist: {}", authToken);
         blackListToken.add(authToken);
+        log.info("Token added to blacklist: {}", authToken);
     }
 }

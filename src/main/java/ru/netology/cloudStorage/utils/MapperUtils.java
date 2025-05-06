@@ -8,7 +8,7 @@ import ru.netology.cloudStorage.entity.User;
 @Service
 public class MapperUtils {
     //Преобразовываем из DTO в Entity
-    public User toUserEntity(FileDTO userDTO) {
+    public User toUserEntity(UserDTO userDTO) {
         User user = new User();
         user.setLogin(userDTO.getLogin());
         user.setPassword(userDTO.getPassword());

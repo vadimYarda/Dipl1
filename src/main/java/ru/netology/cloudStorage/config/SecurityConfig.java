@@ -1,9 +1,9 @@
 package ru.netology.cloudStorage.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,6 +18,7 @@ import ru.netology.cloudStorage.security.JwtFilter;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -27,6 +28,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain configure(final HttpSecurity http) throws Exception {
+        log.info("Configuring HTTP security.");
         return http
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -38,9 +40,9 @@ public class SecurityConfig {
                 .build();
     }
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
+        log.info("Configuring PasswordEncoder with BCrypt.");
         return new BCryptPasswordEncoder(12);
     }
 }
